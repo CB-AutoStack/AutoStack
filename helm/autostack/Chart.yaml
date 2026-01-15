@@ -1,0 +1,14 @@
+apiVersion: v2
+name: autostack
+description: A Helm chart for AutoStack - Vehicle Marketplace Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - autostack
+  - vehicles
+  - marketplace
+  - cloudbees
+maintainers:
+  - name: AutoStack Team
+    email: support@autostack.com

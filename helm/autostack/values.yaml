@@ -1,0 +1,202 @@
+# Default values for AutoStack
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+deployment:
+  hostname: autostack-demo.example.com
+  instanceId: demo
+  environmentName: production
+
+cloudbees:
+  fmKey: "local-mode"
+  environment: production
+
+featureFlags:
+  enabled: true
+  createSecret: true
+  fmKey: "local-mode"
+
+# Web Application
+web:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: autostack/web
+    pullPolicy: Always
+    tag: "latest"
+
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: autostack-demo.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: autostack-demo-tls
+        hosts:
+          - autostack-demo.example.com
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+# Inventory API Service
+apiInventory:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: autostack/api-inventory
+    pullPolicy: Always
+    tag: "latest"
+
+  imagePullSecrets: []
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 8001
+
+  env:
+    - name: PORT
+      value: "8001"
+    - name: DATA_PATH
+      value: "/app/data/seed"
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: autostack-jwt-secret
+          key: secret
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+# Valuations API Service
+apiValuations:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: autostack/api-valuations
+    pullPolicy: Always
+    tag: "latest"
+
+  imagePullSecrets: []
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 8002
+
+  env:
+    - name: PORT
+      value: "8002"
+    - name: DATA_PATH
+      value: "/app/data/seed"
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: autostack-jwt-secret
+          key: secret
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+# JWT Secret Configuration
+jwtSecret:
+  create: true
+  secret: "dev-jwt-secret-change-in-production"

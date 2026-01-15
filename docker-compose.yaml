@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Inventory API Service (Go)
+  api-inventory:
+    build:
+      context: ./apps/api-inventory
+      dockerfile: Dockerfile
+    container_name: autostack-api-inventory
+    environment:
+      DATA_PATH: ${DATA_PATH:-/app/data/seed}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      PORT: ${INVENTORY_PORT:-8001}
+    ports:
+      - "${INVENTORY_PORT:-8001}:8001"
+    volumes:
+      - ./data/seed:/app/data/seed:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autostack-network
+
+  # Valuations API Service (Go)
+  api-valuations:
+    build:
+      context: ./apps/api-valuations
+      dockerfile: Dockerfile
+    container_name: autostack-api-valuations
+    environment:
+      DATA_PATH: ${DATA_PATH:-/app/data/seed}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      PORT: ${VALUATIONS_PORT:-8002}
+    ports:
+      - "${VALUATIONS_PORT:-8002}:8002"
+    volumes:
+      - ./data/seed:/app/data/seed:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - autostack-network
+
+  # Web Application (React + Vite)
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
+        VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
+        VITE_FM_KEY: ${VITE_FM_KEY:-local-mode}
+    container_name: autostack-web
+    environment:
+      VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
+      VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
+      VITE_FM_KEY: ${VITE_FM_KEY:-local-mode}
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      api-inventory:
+        condition: service_healthy
+      api-valuations:
+        condition: service_healthy
+    networks:
+      - autostack-network
+
+networks:
+  autostack-network:
+    driver: bridge

@@ -1,117 +1,189 @@
-# 🚗 AutoStack
+# AutoStack - Vehicle Marketplace Platform
 
-**Mobile-first vehicle marketplace platform**
+AutoStack is a comprehensive vehicle marketplace demonstration platform built with modern cloud-native technologies, featuring CloudBees CI/CD integration and Feature Management.
 
-AutoStack is a consumer-facing automotive marketplace demo showcasing modern mobile app development with CloudBees CI/CD and Feature Management.
+## Architecture
 
----
+AutoStack consists of three main services:
 
-## ✨ Overview
+- **Web UI** (React + Vite) - Modern single-page application for browsing vehicles
+- **API Inventory** (Go) - Vehicle inventory management and search
+- **API Valuations** (Go) - Trade-in vehicle valuation service
 
-AutoStack enables customers to:
-- Browse vehicle inventory (new, used, certified pre-owned)
-- Search and filter by make, model, price, features
-- View detailed listings with photos
-- Get instant trade-in valuations
-- Calculate financing options
-- Schedule test drives
+All services are containerized and can be deployed to Kubernetes using the provided Helm charts.
 
-Built with:
-- **Mobile**: React Native (iOS & Android)
-- **Backend**: Go microservices
-- **CI/CD**: CloudBees workflows
-- **Feature Management**: CloudBees Feature Management (Unify)
-- **Deployment**: Kubernetes with Helm
+## Features
 
----
+- Vehicle search and filtering with multiple criteria
+- International support (USD, GBP, EUR, CAD, AUD)
+- Multi-country vehicle listings
+- Instant trade-in valuations
+- User authentication with JWT
+- Feature flag management with CloudBees Feature Management
+- Responsive web interface
+- RESTful API design
+- In-memory data storage (no database required for demo)
 
-## 📱 Applications
+## CloudBees Feature Flags
 
-### Mobile App (`apps/mobile/`)
-React Native mobile application for iOS and Android
-- Vehicle browsing and search
-- Detailed vehicle views
-- Trade-in valuation
-- Financing calculator
-- Feature flag integration
+AutoStack includes 8 automotive-specific feature flags:
 
-### APIs
-- **api-inventory** - Vehicle listings, search, details
-- **api-valuations** - Trade-in pricing and market data (future)
-- **api-financing** - Payment calculations and pre-approval (future)
+1. **searchAlgorithm** (variant) - Control vehicle sorting: price-low-to-high, newest-first, recommended
+2. **enableAdvancedFilters** (boolean) - Enable/disable advanced filtering UI
+3. **showDealerRatings** (boolean) - Display dealer transparency ratings
+4. **pricingDisplay** (variant) - Show total-price, monthly-payment, or both
+5. **enableInstantTradeIn** (boolean) - Instant vs manual valuation workflow
+6. **showFinancingCalculator** (boolean) - Display financing calculator widget
+7. **enable360Photos** (boolean) - Enable 360-degree photo viewers
+8. **vehicleRecommendations** (variant) - price-based, feature-based, or ai-powered recommendations
 
----
-
-## 🎯 Feature Management Examples
-
-CloudBees Feature Management controls:
-- **Search algorithm** - Price-focused vs feature-focused vs AI-recommended
-- **Pricing display** - Monthly payment first vs total price first
-- **Vehicle recommendations** - Different personalization strategies
-- **Filter options** - Progressive rollout of advanced filters
-- **Image quality** - Bandwidth optimization based on user network
-- **Trade-in flow** - Instant valuation vs dealer contact
-
----
-
-## 🏗️ Architecture
-
-```
-Mobile App (React Native)
-    ↓
-External Ingress
-    ↓
-API Services (Go)
-    ↓
-Database (PostgreSQL)
-```
-
----
-
-## 🚀 Getting Started
+## Quick Start
 
 ### Prerequisites
-- Node.js 20+
-- Go 1.21+
-- Android Studio (for Android emulator)
-- Docker (for local API development)
 
-### Local Development
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Go 1.21+ (for local development)
+- Make (optional, for convenience commands)
 
-**Mobile App:**
+### Running with Docker Compose
+
+1. Clone the repository:
 ```bash
-cd apps/mobile
-npm install
-npm run android  # or npm run ios
+git clone https://github.com/CB-AutoStack/AutoStack.git
+cd AutoStack
 ```
 
-**Backend APIs:**
+2. Copy environment file:
 ```bash
-cd apps/api-inventory
-go run main.go
+cp .env.example .env
 ```
 
----
+3. Build and start all services:
+```bash
+make build
+make up
+```
 
-## 🔧 CI/CD
+4. Access the application:
+- Web UI: http://localhost:3000
+- Inventory API: http://localhost:8001
+- Valuations API: http://localhost:8002
 
-CloudBees workflows handle:
-- Mobile app builds (APK for Android)
-- API container builds
-- Kubernetes deployments
-- Feature Management integration
+### Demo Accounts
 
----
+Use these credentials to log in:
 
-## 📊 Demo Scenarios
+- **US User**: demo@autostack.com / password (USD)
+- **UK User**: james.smith@autostack.co.uk / password (GBP)
+- **German User**: hans.mueller@autostack.de / password (EUR)
+- **Canadian User**: emma.tremblay@autostack.ca / password (CAD)
+- **Australian User**: liam.wilson@autostack.com.au / password (AUD)
 
-1. **Search Algorithm A/B Test** - Compare user engagement with different search rankings
-2. **Pricing Strategy** - Test showing monthly payments vs total price first
-3. **Progressive Rollout** - Deploy new features to 10% → 50% → 100% of users
-4. **Personalization** - Show different vehicle recommendations based on user behavior
+## Development
 
----
+### Project Structure
 
-## 📄 License
+```
+AutoStack/
+├── apps/
+│   ├── web/                 # React web application
+│   ├── api-inventory/       # Vehicle inventory API (Go)
+│   └── api-valuations/      # Valuation API (Go)
+├── data/
+│   └── seed/               # Mock data (JSON files)
+├── helm/
+│   └── autostack/          # Kubernetes Helm chart
+├── .cloudbees/
+│   └── workflows/          # CloudBees CI/CD workflows
+├── docker-compose.yaml     # Local development setup
+├── Makefile               # Convenience commands
+└── README.md
+```
 
-MIT (demo purposes only)
+### Available Commands
+
+```bash
+# Build services
+make build
+
+# Start services
+make up
+
+# Stop services
+make down
+
+# Restart services
+make restart
+
+# View logs
+make logs
+
+# Check service health
+make health
+
+# Clean up
+make clean
+```
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/v1/auth/login` - User login (returns JWT token)
+
+### Vehicles (Inventory API)
+
+- `GET /api/v1/vehicles` - List all vehicles
+- `GET /api/v1/vehicles/{id}` - Get vehicle details
+- `POST /api/v1/vehicles/search` - Search vehicles with filters
+
+### Valuations (Valuations API)
+
+- `POST /api/v1/valuations/estimate` - Get instant valuation
+- `GET /api/v1/valuations` - List valuation history
+- `GET /api/v1/valuations/{id}` - Get valuation details
+- `GET /api/v1/valuations/summary` - Get summary statistics
+
+## Deployment
+
+### Kubernetes Deployment
+
+AutoStack includes a comprehensive Helm chart for Kubernetes deployment:
+
+```bash
+helm install autostack ./helm/autostack \
+  --set deployment.hostname=autostack.example.com
+```
+
+### CloudBees CI/CD
+
+AutoStack includes CloudBees workflows for automated build and deployment:
+
+- `.cloudbees/workflows/build-and-test.yaml` - Build, test, and publish Docker images
+- `.cloudbees/workflows/deploy.yaml` - Deploy to Kubernetes with Helm
+
+## Mock Data
+
+AutoStack includes realistic mock data for demonstration:
+
+- 20 vehicles across 5 countries (US, GB, DE, CA, AU)
+- 8 users from 6 different countries
+- 3 historical valuations
+- Multiple currencies (USD, GBP, EUR, CAD, AUD)
+
+Mock data is loaded from JSON files in `data/seed/` directory.
+
+## Technology Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **Backend**: Go 1.21, Gorilla Mux, JWT authentication
+- **Containerization**: Docker, Docker Compose
+- **Orchestration**: Kubernetes, Helm
+- **CI/CD**: CloudBees Pipelines
+- **Feature Management**: CloudBees Feature Management (Rox)
+- **Data Storage**: In-memory (JSON files)
+
+## License
+
+Copyright 2024 AutoStack. All rights reserved.
