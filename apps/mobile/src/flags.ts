@@ -2,7 +2,7 @@
  * CloudBees Feature Management (Rox) Integration
  */
 
-import Rox from 'cloudbees-rox';
+import Rox from 'rox-browser';
 
 // Define feature flags
 export const Flags = {

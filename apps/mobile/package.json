@@ -20,7 +20,7 @@
     "react-native-safe-area-context": "^4.8.2",
     "react-native-screens": "^3.29.0",
     "axios": "^1.6.5",
-    "cloudbees-rox": "^5.0.1"
+    "rox-browser": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",
