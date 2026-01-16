@@ -48,7 +48,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "autostack.fullname" . }}-api-valuations
+  name: api-valuations
   labels:
     {{- include "autostack.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-valuations

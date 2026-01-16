@@ -196,3 +196,42 @@ jobs:
 
           echo "Extracted artifact ID: $ART_ID"
           printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+
+  # Deploy all components to Dev environment using Helm
+  deploy-dev:
+    # CloudBees environment (must exist in platform settings)
+    # This is the Kubernetes namespace where resources will be deployed
+    environment: auto-stack-dev
+
+    # Reference to reusable deployment workflow
+    uses: ./.cloudbees/workflows/deploy.yaml
+
+    # Wait for all build jobs to complete before deploying
+    needs: [build-web, build-api-inventory, build-api-valuations]
+
+    with:
+      # Docker images to deploy (built in previous jobs)
+      web_image: ${{ vars.DOCKER_USER }}/autostack-web:${{ cloudbees.scm.sha }}
+      api_inventory_image: ${{ vars.DOCKER_USER }}/autostack-api-inventory:${{ cloudbees.scm.sha }}
+      api_valuations_image: ${{ vars.DOCKER_USER }}/autostack-api-valuations:${{ cloudbees.scm.sha }}
+
+      # Artifact IDs for deployment tracking
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_inventory_artifact_id: ${{ needs.build-api-inventory.outputs.ARTIFACT_ID }}
+      api_valuations_artifact_id: ${{ needs.build-api-valuations.outputs.ARTIFACT_ID }}
+
+      # Environment configuration
+      environment_name: auto-stack-dev    # Must match 'environment' above (K8s namespace)
+      repository: ${{ cloudbees.scm.repository }}
+      commit_sha: ${{ cloudbees.scm.sha }}
+
+      # Subdomain configuration
+      # URL will be: <app_name>-<instance_id>-<environment_name>.<base_domain>
+      # Example: autostack-demo-auto-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
+      app_name: autostack             # Application name prefix for subdomain
+      instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
+      base_domain: ${{ vars.STACK_BASE_NAME }}  # Base domain with wildcard DNS
+
+    # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
+    secrets: inherit
+    vars: inherit

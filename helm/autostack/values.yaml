@@ -13,8 +13,12 @@ cloudbees:
 
 featureFlags:
   enabled: true
+  secretName: autostack-fm
+  secretKey: FM_TOKEN
+  mountPath: /usr/share/nginx/html/config
+  fileName: fm.json
   createSecret: true
-  fmKey: "local-mode"
+  fmKey: ""  # Will be set by deploy workflow
 
 # Web Application
 web:
@@ -44,6 +48,7 @@ web:
   service:
     type: ClusterIP
     port: 80
+    targetPort: 3000
 
   ingress:
     enabled: true

@@ -20,13 +20,32 @@ spec:
         {{- include "autostack.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: web
     spec:
+      {{- if .Values.featureFlags.enabled }}
+      initContainers:
+        - name: write-fm-config
+          image: alpine:3.20
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -eu
+              mkdir -p {{ .Values.featureFlags.mountPath }}
+              # Write fm.json from secret value (plain string)
+              printf '{"envKey":"%s"}\n' "$(cat /secret/{{ .Values.featureFlags.secretKey }})" \
+                > {{ .Values.featureFlags.mountPath }}/{{ .Values.featureFlags.fileName }}
+          volumeMounts:
+            - name: fm-config
+              mountPath: {{ .Values.featureFlags.mountPath }}
+            - name: fm-secret
+              mountPath: /secret
+              readOnly: true
+      {{- end }}
       containers:
         - name: web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: {{ .Values.web.service.targetPort }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -42,6 +61,25 @@ spec:
             periodSeconds: 5
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
+          {{- if .Values.featureFlags.enabled }}
+          volumeMounts:
+            - name: fm-config
+              mountPath: {{ .Values.featureFlags.mountPath }}
+              readOnly: true
+          {{- end }}
+      {{- if .Values.featureFlags.enabled }}
+      volumes:
+        # Where fm.json is written by the initContainer and then mounted into the app
+        - name: fm-config
+          emptyDir: {}
+        # Secret providing the FM_KEY (string)
+        - name: fm-secret
+          secret:
+            secretName: {{ .Values.featureFlags.secretName }}
+            items:
+              - key: {{ .Values.featureFlags.secretKey }}
+                path: {{ .Values.featureFlags.secretKey }}
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service
