@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { valuationsAPI } from '../services/api';
 import type { ValuationResponse } from '../types';
 import { formatCurrency, formatPercentage } from '../utils/format';
@@ -37,8 +38,12 @@ export default function ValuationPage() {
 
       const result = await valuationsAPI.estimate(request);
       setValuation(result);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to calculate valuation');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Failed to calculate valuation');
+      } else {
+        setError('Failed to calculate valuation');
+      }
       console.error('Valuation failed:', err);
     } finally {
       setLoading(false);

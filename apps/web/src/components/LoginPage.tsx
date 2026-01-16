@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { authAPI } from '../services/api';
 
 interface LoginPageProps {
@@ -24,8 +25,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       localStorage.setItem('user', JSON.stringify(response.user));
       onLogin();
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }

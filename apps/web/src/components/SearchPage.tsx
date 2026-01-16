@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { vehiclesAPI } from '../services/api';
 import type { Vehicle } from '../types';
@@ -21,18 +21,17 @@ export default function SearchPage() {
   const searchAlgorithm = useRoxVariant('searchAlgorithm');
   const showDealerRatings = useRoxFlag('showDealerRatings');
 
-  useEffect(() => {
-    loadVehicles();
-  }, []);
-
-  // Re-sort vehicles when search algorithm changes
-  useEffect(() => {
-    if (vehicles.length > 0) {
-      setVehicles(sortVehicles(vehicles));
+  const sortVehicles = useCallback((vehicleList: Vehicle[]) => {
+    if (searchAlgorithm === 'price-low-to-high') {
+      return [...vehicleList].sort((a, b) => a.price - b.price);
+    } else if (searchAlgorithm === 'newest-first') {
+      return [...vehicleList].sort((a, b) => b.year - a.year);
     }
+    // Default: recommended (could be based on user preferences)
+    return vehicleList;
   }, [searchAlgorithm]);
 
-  const loadVehicles = async () => {
+  const loadVehicles = useCallback(async () => {
     try {
       const data = await vehiclesAPI.getAll();
       setVehicles(sortVehicles(data));
@@ -41,17 +40,18 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sortVehicles]);
 
-  const sortVehicles = (vehicleList: Vehicle[]) => {
-    if (searchAlgorithm === 'price-low-to-high') {
-      return [...vehicleList].sort((a, b) => a.price - b.price);
-    } else if (searchAlgorithm === 'newest-first') {
-      return [...vehicleList].sort((a, b) => b.year - a.year);
-    }
-    // Default: recommended (could be based on user preferences)
-    return vehicleList;
-  };
+  useEffect(() => {
+    loadVehicles();
+  }, [loadVehicles]);
+
+  // Re-sort vehicles when search algorithm changes
+  useEffect(() => {
+    setVehicles((currentVehicles) =>
+      currentVehicles.length > 0 ? sortVehicles(currentVehicles) : currentVehicles
+    );
+  }, [searchAlgorithm, sortVehicles]);
 
   const handleSearch = async () => {
     setLoading(true);

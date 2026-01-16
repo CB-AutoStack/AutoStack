@@ -123,7 +123,7 @@ export const valuationsAPI = {
     return response.data.data;
   },
 
-  getSummary: async (): Promise<any> => {
+  getSummary: async (): Promise<Record<string, unknown>> => {
     const response = await apiClient.get('/valuations/summary');
     return response.data;
   },

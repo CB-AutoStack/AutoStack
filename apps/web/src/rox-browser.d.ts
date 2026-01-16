@@ -19,7 +19,7 @@ declare module 'rox-browser' {
     debugLevel?: string;
   }
 
-  export function register(namespace: string, flags: any): void;
+  export function register(namespace: string, flags: object): void;
   export function setup(apiKey: string, options?: RoxSetupOptions): Promise<void>;
 
   const Rox: {
