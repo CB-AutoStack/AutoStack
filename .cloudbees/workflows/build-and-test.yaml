@@ -118,7 +118,7 @@ jobs:
         id: kaniko-inventory
         uses: cloudbees-io/kaniko@v1
         with:
-          context: apps/api-inventory
+          context: .
           dockerfile: apps/api-inventory/Dockerfile
           destination: ${{ vars.DOCKER_USER }}/autostack-api-inventory:${{ cloudbees.scm.sha }}
           labels: |
@@ -173,7 +173,7 @@ jobs:
         id: kaniko-valuations
         uses: cloudbees-io/kaniko@v1
         with:
-          context: apps/api-valuations
+          context: .
           dockerfile: apps/api-valuations/Dockerfile
           destination: ${{ vars.DOCKER_USER }}/autostack-api-valuations:${{ cloudbees.scm.sha }}
           labels: |

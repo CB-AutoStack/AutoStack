@@ -82,18 +82,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-            <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-              <strong>Demo Accounts:</strong>
-            </p>
-            <p style={{ fontSize: '0.85rem', color: '#666' }}>
-              demo@autostack.com / password (US - USD)
-            </p>
-            <p style={{ fontSize: '0.85rem', color: '#666' }}>
-              james.smith@autostack.co.uk / password (GB - GBP)
-            </p>
-          </div>
         </div>
       </div>
     </div>

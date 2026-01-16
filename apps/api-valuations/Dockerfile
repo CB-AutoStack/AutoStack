@@ -4,11 +4,11 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /build
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY apps/api-valuations/go.mod apps/api-valuations/go.sum ./
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY apps/api-valuations/ ./
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./cmd/server
@@ -18,13 +18,34 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates wget
 
+# Create non-root user
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
 WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /build/server .
 
+# Copy seed data (from build context root)
+COPY data/seed ./data/seed
+
+# Change ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Set environment variables
+ENV DATA_PATH=/app/data/seed \
+    PORT=8002
+
 # Expose port
 EXPOSE 8002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8002/health || exit 1
 
 # Run the application
 CMD ["./server"]
