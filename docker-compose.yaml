@@ -11,6 +11,8 @@ services:
       DATA_PATH: ${DATA_PATH:-/app/data/seed}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       PORT: ${INVENTORY_PORT:-8001}
+      CLOUDBEES_FM_API_KEY: ${CLOUDBEES_FM_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "${INVENTORY_PORT:-8001}:8001"
     volumes:
@@ -33,6 +35,8 @@ services:
       DATA_PATH: ${DATA_PATH:-/app/data/seed}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       PORT: ${VALUATIONS_PORT:-8002}
+      CLOUDBEES_FM_API_KEY: ${CLOUDBEES_FM_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "${VALUATIONS_PORT:-8002}:8002"
     volumes:
@@ -53,12 +57,12 @@ services:
       args:
         VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
         VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
-        VITE_ROX_API_KEY: ${VITE_ROX_API_KEY:-}
+        VITE_ROX_API_KEY: ${CLOUDBEES_FM_API_KEY}
     container_name: autostack-web
     environment:
       VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
       VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
-      VITE_ROX_API_KEY: ${VITE_ROX_API_KEY:-}
+      VITE_ROX_API_KEY: ${CLOUDBEES_FM_API_KEY}
     ports:
       - "${WEB_PORT:-3000}:80"
     depends_on:
