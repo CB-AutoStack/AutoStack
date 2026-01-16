@@ -15,11 +15,15 @@ export default function SearchPage() {
     minPrice: '',
     maxPrice: '',
     currency: '',
+    transmission: '',
+    fuelType: '',
   });
 
   // Reactive feature flags
   const searchAlgorithm = useRoxVariant('searchAlgorithm');
   const showDealerRatings = useRoxFlag('showDealerRatings');
+  const enableAdvancedFilters = useRoxFlag('enableAdvancedFilters');
+  const pricingDisplay = useRoxVariant('pricingDisplay');
 
   const sortVehicles = useCallback((vehicleList: Vehicle[]) => {
     if (searchAlgorithm === 'price-low-to-high') {
@@ -79,8 +83,21 @@ export default function SearchPage() {
       minPrice: '',
       maxPrice: '',
       currency: '',
+      transmission: '',
+      fuelType: '',
     });
     loadVehicles();
+  };
+
+  // Calculate estimated monthly payment (simple calculation)
+  const calculateMonthlyPayment = (price: number): number => {
+    const downPayment = price * 0.1; // 10% down
+    const loanAmount = price - downPayment;
+    const interestRate = 0.06; // 6% APR
+    const months = 60; // 5 years
+    const monthlyRate = interestRate / 12;
+    return (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+           (Math.pow(1 + monthlyRate, months) - 1);
   };
 
   return (
@@ -130,6 +147,35 @@ export default function SearchPage() {
               placeholder="100000"
             />
           </div>
+          {enableAdvancedFilters && (
+            <>
+              <div className="form-group">
+                <label>Transmission</label>
+                <select
+                  value={filters.transmission}
+                  onChange={(e) => setFilters({ ...filters, transmission: e.target.value })}
+                >
+                  <option value="">All</option>
+                  <option value="automatic">Automatic</option>
+                  <option value="manual">Manual</option>
+                  <option value="cvt">CVT</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Fuel Type</label>
+                <select
+                  value={filters.fuelType}
+                  onChange={(e) => setFilters({ ...filters, fuelType: e.target.value })}
+                >
+                  <option value="">All</option>
+                  <option value="gasoline">Gasoline</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="electric">Electric</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+            </>
+          )}
         </div>
         <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
           <button onClick={handleSearch} className="btn btn-primary">
@@ -168,9 +214,24 @@ export default function SearchPage() {
                   {vehicle.year} {vehicle.make} {vehicle.model}
                 </h4>
                 <p style={{ color: '#666', marginBottom: '0.5rem' }}>{vehicle.trim}</p>
-                <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#4a9eff' }}>
-                  {formatCurrency(vehicle.price, vehicle.currency)}
-                </p>
+                {pricingDisplay === 'monthly-payment' ? (
+                  <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#4a9eff' }}>
+                    {formatCurrency(calculateMonthlyPayment(vehicle.price), vehicle.currency)}/mo
+                  </p>
+                ) : pricingDisplay === 'both' ? (
+                  <>
+                    <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#4a9eff' }}>
+                      {formatCurrency(vehicle.price, vehicle.currency)}
+                    </p>
+                    <p style={{ fontSize: '0.9rem', color: '#666' }}>
+                      or {formatCurrency(calculateMonthlyPayment(vehicle.price), vehicle.currency)}/mo
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#4a9eff' }}>
+                    {formatCurrency(vehicle.price, vehicle.currency)}
+                  </p>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
                   <span>{formatMileage(vehicle.mileage)} miles</span>
                   <span>{vehicle.condition}</span>

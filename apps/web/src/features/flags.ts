@@ -2,7 +2,6 @@
 import Rox, { type FetcherResults, type RoxSetupOptions } from 'rox-browser';
 
 // Define feature flags with default values
-// Only flags that are actively used in the UI
 export class FeatureFlags {
   // Search algorithm variant - controls vehicle sorting on browse page
   public searchAlgorithm = new Rox.RoxString('price-low-to-high', [
@@ -16,6 +15,29 @@ export class FeatureFlags {
 
   // Instant trade-in feature - changes trade-in valuation page messaging
   public enableInstantTradeIn = new Rox.Flag(false);
+
+  // Advanced filtering options on search page
+  public enableAdvancedFilters = new Rox.Flag(false);
+
+  // Pricing display variant - how prices are shown
+  public pricingDisplay = new Rox.RoxString('total-price', [
+    'total-price',
+    'monthly-payment',
+    'both',
+  ]);
+
+  // Financing calculator on vehicle detail page
+  public showFinancingCalculator = new Rox.Flag(false);
+
+  // 360-degree photo viewer
+  public enable360Photos = new Rox.Flag(false);
+
+  // Vehicle recommendations algorithm
+  public vehicleRecommendations = new Rox.RoxString('price-based', [
+    'price-based',
+    'feature-based',
+    'ai-powered',
+  ]);
 }
 
 // Create feature flags instance
@@ -108,6 +130,26 @@ export function isInstantTradeInEnabled(): boolean {
   return flags.enableInstantTradeIn.isEnabled();
 }
 
+export function isAdvancedFiltersEnabled(): boolean {
+  return flags.enableAdvancedFilters.isEnabled();
+}
+
+export function getPricingDisplay(): string {
+  return flags.pricingDisplay.getValue();
+}
+
+export function isFinancingCalculatorEnabled(): boolean {
+  return flags.showFinancingCalculator.isEnabled();
+}
+
+export function is360PhotosEnabled(): boolean {
+  return flags.enable360Photos.isEnabled();
+}
+
+export function getVehicleRecommendations(): string {
+  return flags.vehicleRecommendations.getValue();
+}
+
 // Reactive feature flags pattern (inspired by AccountStack)
 // Snapshot of current flag values
 let _snapshot: Record<string, boolean | string> = {};
@@ -121,6 +163,11 @@ function buildSnapshot(): Record<string, boolean | string> {
     searchAlgorithm: flags.searchAlgorithm.getValue(),
     showDealerRatings: flags.showDealerRatings.isEnabled(),
     enableInstantTradeIn: flags.enableInstantTradeIn.isEnabled(),
+    enableAdvancedFilters: flags.enableAdvancedFilters.isEnabled(),
+    pricingDisplay: flags.pricingDisplay.getValue(),
+    showFinancingCalculator: flags.showFinancingCalculator.isEnabled(),
+    enable360Photos: flags.enable360Photos.isEnabled(),
+    vehicleRecommendations: flags.vehicleRecommendations.getValue(),
   };
 }
 
@@ -158,5 +205,10 @@ export function useFeatureFlags() {
     searchAlgorithm: getSearchAlgorithm(),
     showDealerRatings: isDealerRatingsEnabled(),
     enableInstantTradeIn: isInstantTradeInEnabled(),
+    enableAdvancedFilters: isAdvancedFiltersEnabled(),
+    pricingDisplay: getPricingDisplay(),
+    showFinancingCalculator: isFinancingCalculatorEnabled(),
+    enable360Photos: is360PhotosEnabled(),
+    vehicleRecommendations: getVehicleRecommendations(),
   };
 }
