@@ -55,16 +55,11 @@ services:
       context: ./apps/web
       dockerfile: Dockerfile
       args:
-        VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
-        VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
         VITE_ROX_API_KEY: ${CLOUDBEES_FM_API_KEY}
+        NGINX_CONFIG: nginx.local.conf
     container_name: autostack-web
-    environment:
-      VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
-      VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
-      VITE_ROX_API_KEY: ${CLOUDBEES_FM_API_KEY}
     ports:
-      - "${WEB_PORT:-3000}:80"
+      - "${WEB_PORT:-3000}:3000"
     depends_on:
       api-inventory:
         condition: service_healthy

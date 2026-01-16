@@ -1,40 +1,49 @@
-# Build stage
-FROM node:18-alpine AS builder
+# Multi-stage build for React application
+FROM node:18-alpine AS base
 
+# Install dependencies only when needed
+FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+
+# Accept build arguments
+ARG VITE_ROX_API_KEY
+ARG NGINX_CONFIG=nginx.conf
+ENV NGINX_CONFIG=${NGINX_CONFIG}
+# Pass FM key to Vite build (optional - app works without it)
+ENV VITE_ROX_API_KEY=${VITE_ROX_API_KEY}
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_API_INVENTORY_URL
-ARG VITE_API_VALUATIONS_URL
-ARG VITE_ROX_API_KEY
-
-ENV VITE_API_INVENTORY_URL=$VITE_API_INVENTORY_URL
-ENV VITE_API_VALUATIONS_URL=$VITE_API_VALUATIONS_URL
-ENV VITE_ROX_API_KEY=$VITE_ROX_API_KEY
-
-# Build the application
+# Build with default BASE_PATH=/
+# Runtime base path detection will handle environment-specific paths
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production image, copy all the files and run nginx
+FROM nginx:alpine AS runner
+WORKDIR /app
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Accept nginx config arg in runner stage
+ARG NGINX_CONFIG=nginx.conf
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
-EXPOSE 80
+# Copy nginx configuration (use build arg to choose which config)
+COPY ${NGINX_CONFIG} /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 3000
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

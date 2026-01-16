@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { valuationsAPI } from '../services/api';
 import type { ValuationResponse } from '../types';
 import { formatCurrency, formatPercentage } from '../utils/format';
-import { Flags } from '../flags';
+import { flags } from '../features/flags';
 
 export default function ValuationPage() {
   const [formData, setFormData] = useState({
@@ -42,7 +42,7 @@ export default function ValuationPage() {
     }
   };
 
-  const isInstantEnabled = Flags.enableInstantTradeIn.isEnabled();
+  const isInstantEnabled = flags.enableInstantTradeIn.isEnabled();
 
   return (
     <div className="container">

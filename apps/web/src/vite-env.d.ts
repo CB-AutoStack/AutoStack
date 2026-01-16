@@ -1,11 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string;
-  readonly VITE_API_INVENTORY_URL: string;
-  readonly VITE_API_VALUATIONS_URL: string;
   readonly VITE_ROX_API_KEY: string;
-  readonly VITE_ENV: string;
+  readonly BASE_URL: string;
 }
 
 interface ImportMeta {

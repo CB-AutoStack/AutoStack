@@ -9,8 +9,18 @@ declare module 'rox-browser' {
     getValue(): string;
   }
 
+  export interface FetcherResults {
+    hasChanges: boolean;
+    fetcherStatus: string;
+  }
+
+  export interface RoxSetupOptions {
+    configurationFetchedHandler?: (fetcherResults: FetcherResults) => void;
+    debugLevel?: string;
+  }
+
   export function register(namespace: string, flags: any): void;
-  export function setup(apiKey: string): Promise<void>;
+  export function setup(apiKey: string, options?: RoxSetupOptions): Promise<void>;
 
   const Rox: {
     Flag: typeof Flag;

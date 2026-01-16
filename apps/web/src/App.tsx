@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { initializeFeatureFlags } from './flags';
+import { initializeFeatureFlags } from './features/flags';
 import { authAPI } from './services/api';
 import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { vehiclesAPI } from '../services/api';
 import type { Vehicle } from '../types';
 import { formatCurrency, formatMileage } from '../utils/format';
-import { Flags } from '../flags';
+import { flags } from '../features/flags';
 
 export default function SearchPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -32,7 +32,7 @@ export default function SearchPage() {
   };
 
   const sortVehicles = (vehicleList: Vehicle[]) => {
-    const algorithm = Flags.searchAlgorithm.getValue();
+    const algorithm = flags.searchAlgorithm.getValue();
 
     if (algorithm === 'price-low-to-high') {
       return [...vehicleList].sort((a, b) => a.price - b.price);
@@ -165,7 +165,7 @@ export default function SearchPage() {
                   <span>{formatMileage(vehicle.mileage)} miles</span>
                   <span>{vehicle.condition}</span>
                 </div>
-                {Flags.showDealerRatings.isEnabled() && (
+                {flags.showDealerRatings.isEnabled() && (
                   <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
                     ⭐ {vehicle.dealerRating.toFixed(1)} Dealer Rating
                   </p>
