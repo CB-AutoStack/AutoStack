@@ -20,8 +20,8 @@ jobs:
       - name: Checkout
         uses: cloudbees-io/checkout@v1
 
-      - name: Install dependencies and build
-        kind: build
+      - name: Install dependencies and test
+        kind: test
         uses: docker://node:20-alpine
         env:
           CI: "true"
@@ -34,6 +34,17 @@ jobs:
           echo "Running linter..."
           npm run lint || true
 
+          echo "Running tests..."
+          npm test
+
+      - name: Build application
+        kind: build
+        uses: docker://node:20-alpine
+        env:
+          CI: "true"
+        run: |
+          set -eu
+          cd apps/web
           echo "Building application..."
           npm run build
 
