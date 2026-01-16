@@ -4,7 +4,7 @@ declare module 'rox-browser' {
     isEnabled(): boolean;
   }
 
-  export class Variant {
+  export class RoxString {
     constructor(defaultValue: string, options: string[]);
     getValue(): string;
   }
@@ -24,7 +24,7 @@ declare module 'rox-browser' {
 
   const Rox: {
     Flag: typeof Flag;
-    Variant: typeof Variant;
+    RoxString: typeof RoxString;
     register: typeof register;
     setup: typeof setup;
   };

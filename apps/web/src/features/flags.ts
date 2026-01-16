@@ -4,7 +4,7 @@ import Rox, { type FetcherResults, type RoxSetupOptions } from 'rox-browser';
 // Define feature flags with default values
 export class FeatureFlags {
   // Search algorithm variant
-  public searchAlgorithm = new Rox.Variant('price-low-to-high', [
+  public searchAlgorithm = new Rox.RoxString('price-low-to-high', [
     'price-low-to-high',
     'newest-first',
     'recommended',
@@ -17,7 +17,7 @@ export class FeatureFlags {
   public showDealerRatings = new Rox.Flag(true);
 
   // Pricing display variant
-  public pricingDisplay = new Rox.Variant('total-price', [
+  public pricingDisplay = new Rox.RoxString('total-price', [
     'total-price',
     'monthly-payment',
     'both',
@@ -33,7 +33,7 @@ export class FeatureFlags {
   public enable360Photos = new Rox.Flag(false);
 
   // Vehicle recommendations variant
-  public vehicleRecommendations = new Rox.Variant('price-based', [
+  public vehicleRecommendations = new Rox.RoxString('price-based', [
     'price-based',
     'feature-based',
     'ai-powered',
