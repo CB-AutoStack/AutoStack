@@ -53,12 +53,12 @@ services:
       args:
         VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
         VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
-        VITE_FM_KEY: ${VITE_FM_KEY:-local-mode}
+        VITE_ROX_API_KEY: ${VITE_ROX_API_KEY:-}
     container_name: autostack-web
     environment:
       VITE_API_INVENTORY_URL: ${VITE_API_INVENTORY_URL:-http://localhost:8001}
       VITE_API_VALUATIONS_URL: ${VITE_API_VALUATIONS_URL:-http://localhost:8002}
-      VITE_FM_KEY: ${VITE_FM_KEY:-local-mode}
+      VITE_ROX_API_KEY: ${VITE_ROX_API_KEY:-}
     ports:
       - "${WEB_PORT:-3000}:80"
     depends_on:

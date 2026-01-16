@@ -32,20 +32,20 @@ export const Flags = {
 
 /**
  * Initialize feature flags
- * Reads FM_KEY from environment or uses local mode
+ * Reads ROX_API_KEY from environment or uses local mode
  */
 export async function initializeFeatureFlags(): Promise<void> {
-  const FM_KEY = import.meta.env.VITE_FM_KEY || 'local-mode';
+  const ROX_API_KEY = import.meta.env.VITE_ROX_API_KEY;
 
-  if (FM_KEY === 'local-mode') {
+  if (!ROX_API_KEY) {
     console.log('Running in local mode - using default flag values');
     return Promise.resolve();
   }
 
-  // Try to use rox-browser if available and FM_KEY is provided
+  // Try to use rox-browser if available and ROX_API_KEY is provided
   try {
     const Rox = await import('rox-browser');
-    await Rox.default.setup(FM_KEY);
+    await Rox.default.setup(ROX_API_KEY);
     console.log('CloudBees Feature Management initialized');
   } catch (error) {
     console.warn('CloudBees Feature Management not available, using default values');
