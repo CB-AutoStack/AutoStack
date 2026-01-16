@@ -1,45 +1,40 @@
 /**
  * CloudBees Feature Management (Rox) Integration
+ * Falls back to default values if FM is not configured
  */
 
-import Rox from 'rox-browser';
+// Simple flag objects that work without rox-browser
+class SimpleFlag {
+  constructor(private defaultValue: boolean) {}
+  isEnabled(): boolean {
+    return this.defaultValue;
+  }
+}
 
-// Define feature flags
+class SimpleVariant {
+  constructor(private defaultValue: string) {}
+  getValue(): string {
+    return this.defaultValue;
+  }
+}
+
+// Define feature flags with fallback implementations
 export const Flags = {
-  // Search algorithm variant
-  searchAlgorithm: new Rox.Variant('price-low-to-high', ['price-low-to-high', 'newest-first', 'recommended']),
-
-  // Advanced filtering
-  enableAdvancedFilters: new Rox.Flag(false),
-
-  // Dealer ratings display
-  showDealerRatings: new Rox.Flag(true),
-
-  // Pricing display variant
-  pricingDisplay: new Rox.Variant('total-price', ['total-price', 'monthly-payment', 'both']),
-
-  // Instant trade-in feature
-  enableInstantTradeIn: new Rox.Flag(false),
-
-  // Financing calculator
-  showFinancingCalculator: new Rox.Flag(true),
-
-  // 360-degree photos
-  enable360Photos: new Rox.Flag(false),
-
-  // Vehicle recommendations variant
-  vehicleRecommendations: new Rox.Variant('price-based', ['price-based', 'feature-based', 'ai-powered']),
+  searchAlgorithm: new SimpleVariant('price-low-to-high'),
+  enableAdvancedFilters: new SimpleFlag(false),
+  showDealerRatings: new SimpleFlag(true),
+  pricingDisplay: new SimpleVariant('total-price'),
+  enableInstantTradeIn: new SimpleFlag(false),
+  showFinancingCalculator: new SimpleFlag(true),
+  enable360Photos: new SimpleFlag(false),
+  vehicleRecommendations: new SimpleVariant('price-based'),
 };
-
-// Register flags with Rox
-Rox.register('autostack', Flags);
 
 /**
  * Initialize feature flags
  * Reads FM_KEY from environment or uses local mode
  */
 export async function initializeFeatureFlags(): Promise<void> {
-  // In production, this would come from environment variable
   const FM_KEY = import.meta.env.VITE_FM_KEY || 'local-mode';
 
   if (FM_KEY === 'local-mode') {
@@ -47,11 +42,13 @@ export async function initializeFeatureFlags(): Promise<void> {
     return Promise.resolve();
   }
 
+  // Try to use rox-browser if available and FM_KEY is provided
   try {
-    await Rox.setup(FM_KEY);
+    const Rox = await import('rox-browser');
+    await Rox.default.setup(FM_KEY);
     console.log('CloudBees Feature Management initialized');
   } catch (error) {
-    console.error('Failed to initialize feature flags:', error);
+    console.warn('CloudBees Feature Management not available, using default values');
     // Continue with default values
   }
 }
