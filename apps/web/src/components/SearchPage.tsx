@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { vehiclesAPI } from '../services/api';
 import type { Vehicle } from '../types';
 import { formatCurrency, formatMileage } from '../utils/format';
-import { flags } from '../features/flags';
+import useRoxVariant from '../hooks/useRoxVariant';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 export default function SearchPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -16,9 +17,20 @@ export default function SearchPage() {
     currency: '',
   });
 
+  // Reactive feature flags
+  const searchAlgorithm = useRoxVariant('searchAlgorithm');
+  const showDealerRatings = useRoxFlag('showDealerRatings');
+
   useEffect(() => {
     loadVehicles();
   }, []);
+
+  // Re-sort vehicles when search algorithm changes
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      setVehicles(sortVehicles(vehicles));
+    }
+  }, [searchAlgorithm]);
 
   const loadVehicles = async () => {
     try {
@@ -32,11 +44,9 @@ export default function SearchPage() {
   };
 
   const sortVehicles = (vehicleList: Vehicle[]) => {
-    const algorithm = flags.searchAlgorithm.getValue();
-
-    if (algorithm === 'price-low-to-high') {
+    if (searchAlgorithm === 'price-low-to-high') {
       return [...vehicleList].sort((a, b) => a.price - b.price);
-    } else if (algorithm === 'newest-first') {
+    } else if (searchAlgorithm === 'newest-first') {
       return [...vehicleList].sort((a, b) => b.year - a.year);
     }
     // Default: recommended (could be based on user preferences)
@@ -165,7 +175,7 @@ export default function SearchPage() {
                   <span>{formatMileage(vehicle.mileage)} miles</span>
                   <span>{vehicle.condition}</span>
                 </div>
-                {flags.showDealerRatings.isEnabled() && (
+                {showDealerRatings && (
                   <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
                     ⭐ {vehicle.dealerRating.toFixed(1)} Dealer Rating
                   </p>

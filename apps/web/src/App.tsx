@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { initializeFeatureFlags } from './features/flags';
+import { useState } from 'react';
 import { authAPI } from './services/api';
 import HomePage from './components/HomePage';
 import SearchPage from './components/SearchPage';
@@ -11,15 +10,7 @@ import './App.css';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(authAPI.isAuthenticated());
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Initialize feature flags
-    initializeFeatureFlags().finally(() => {
-      setIsLoading(false);
-    });
-  }, []);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -30,15 +21,6 @@ function AppContent() {
     setIsAuthenticated(false);
     navigate('/');
   };
-
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>Loading AutoStack...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="app">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { valuationsAPI } from '../services/api';
 import type { ValuationResponse } from '../types';
 import { formatCurrency, formatPercentage } from '../utils/format';
-import { flags } from '../features/flags';
+import useRoxFlag from '../hooks/useRoxFlag';
 
 export default function ValuationPage() {
   const [formData, setFormData] = useState({
@@ -16,6 +16,9 @@ export default function ValuationPage() {
   const [valuation, setValuation] = useState<ValuationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Reactive feature flag
+  const isInstantEnabled = useRoxFlag('enableInstantTradeIn');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +44,6 @@ export default function ValuationPage() {
       setLoading(false);
     }
   };
-
-  const isInstantEnabled = flags.enableInstantTradeIn.isEnabled();
 
   return (
     <div className="container">
