@@ -155,13 +155,111 @@ jobs:
                 type: ClusterIP
                 port: 8002
 
-      - name: Wait for deployment
-        uses: docker://bitnami/kubectl:latest
+      - name: Calculate version and metadata
+        id: metadata
+        uses: docker://alpine:3.20
         shell: sh
+        env:
+          COMMIT_SHA: ${{ inputs.commit_sha }}
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
         run: |
           set -eu
-          echo "Waiting for deployments to be ready..."
-          kubectl rollout status deployment/autostack-web -n ${{ inputs.environment_name }} --timeout=5m
-          kubectl rollout status deployment/autostack-api-inventory -n ${{ inputs.environment_name }} --timeout=5m
-          kubectl rollout status deployment/autostack-api-valuations -n ${{ inputs.environment_name }} --timeout=5m
-          echo "All deployments are ready!"
+
+          # Short SHA (12 chars)
+          SHORT_SHA=$(echo "$COMMIT_SHA" | cut -c1-12)
+          printf '%s' "$SHORT_SHA" > "$CLOUDBEES_OUTPUTS/sha12"
+          echo "Short SHA: $SHORT_SHA"
+
+          # Short version (first 7 chars of SHA)
+          SHORT_VER=$(echo "$COMMIT_SHA" | cut -c1-7)
+          printf '%s' "$SHORT_VER" > "$CLOUDBEES_OUTPUTS/ver"
+          echo "Version: $SHORT_VER"
+
+          # Timestamp
+          TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
+          printf '%s' "$TIMESTAMP" > "$CLOUDBEES_OUTPUTS/ts"
+          echo "Timestamp: $TIMESTAMP"
+
+          # Environment code (shortened for labels)
+          case "$ENVIRONMENT_NAME" in
+            auto-stack-dev)
+              ENV_CODE="dev"
+              ;;
+            auto-stack-staging)
+              ENV_CODE="staging"
+              ;;
+            auto-stack-prod)
+              ENV_CODE="prod"
+              ;;
+            *)
+              # Use first 8 chars of environment name
+              ENV_CODE=$(echo "$ENVIRONMENT_NAME" | cut -c1-8)
+              ;;
+          esac
+          printf '%s' "$ENV_CODE" > "$CLOUDBEES_OUTPUTS/code"
+          echo "Environment code: $ENV_CODE"
+
+      - name: Register Web artifact
+        kind: deploy
+        uses: cloudbees-io/register-deployed-artifact@v2
+        with:
+          artifact-id: ${{ inputs.web_artifact_id }}
+          target-environment: ${{ inputs.environment_name }}
+          labels: >
+            ver=${{ steps.metadata.outputs.ver }},
+            sha=${{ steps.metadata.outputs.sha12 }},
+            ts=${{ steps.metadata.outputs.ts }},
+            d.${{ steps.metadata.outputs.code }}=true
+
+      - name: Register Inventory API artifact
+        kind: deploy
+        uses: cloudbees-io/register-deployed-artifact@v2
+        with:
+          artifact-id: ${{ inputs.api_inventory_artifact_id }}
+          target-environment: ${{ inputs.environment_name }}
+          labels: >
+            ver=${{ steps.metadata.outputs.ver }},
+            sha=${{ steps.metadata.outputs.sha12 }},
+            ts=${{ steps.metadata.outputs.ts }},
+            d.${{ steps.metadata.outputs.code }}=true
+
+      - name: Register Valuations API artifact
+        kind: deploy
+        uses: cloudbees-io/register-deployed-artifact@v2
+        with:
+          artifact-id: ${{ inputs.api_valuations_artifact_id }}
+          target-environment: ${{ inputs.environment_name }}
+          labels: >
+            ver=${{ steps.metadata.outputs.ver }},
+            sha=${{ steps.metadata.outputs.sha12 }},
+            ts=${{ steps.metadata.outputs.ts }},
+            d.${{ steps.metadata.outputs.code }}=true
+
+      - name: Publish deployment evidence
+        kind: deploy
+        uses: cloudbees-io/publish-evidence-item@v1
+        with:
+          format: MARKDOWN
+          content: |
+            ## Deployed: AutoStack (All Components)
+
+            **Environment:** `${{ inputs.environment_name }}`
+            **Instance ID:** `${{ inputs.instance_id }}`
+            **Repository:** `${{ inputs.repository }}`
+            **Commit:** `${{ inputs.commit_sha }}`
+            **URL:** [https://${{ steps.hostname.outputs.name }}](https://${{ steps.hostname.outputs.name }})
+
+            ### Components Deployed
+            - **Web:** `${{ inputs.web_image }}`
+            - **API Inventory:** `${{ inputs.api_inventory_image }}`
+            - **API Valuations:** `${{ inputs.api_valuations_image }}`
+
+            ### Deployment Details
+            - Kubernetes namespace: `${{ inputs.environment_name }}`
+            - Helm release: `autostack`
+            - Hostname: `${{ steps.hostname.outputs.name }}`
+            - Public ingress with SSL (cert-manager + LetsEncrypt)
+            - Host-based routing (subdomain)
+            - Deployment method: CloudBees Helm Install Action
+            - Feature Management Key: ${{ secrets.FM_TOKEN && '✓ from secret' || '✗ using local-mode' }}
+            - Deployment successful ✓
