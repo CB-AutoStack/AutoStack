@@ -11,9 +11,9 @@ import type {
 } from '../types';
 
 // Create axios instance with base configuration
-// Uses relative path 'api' so nginx can proxy to backend services
+// Uses absolute path '/api' so nginx can proxy to backend services
 const apiClient: AxiosInstance = axios.create({
-  baseURL: 'api',
+  baseURL: '/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
