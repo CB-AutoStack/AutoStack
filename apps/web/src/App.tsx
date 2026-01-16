@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { initializeFeatureFlags } from './flags';
 import { authAPI } from './services/api';
@@ -9,9 +9,10 @@ import ValuationPage from './components/ValuationPage';
 import LoginPage from './components/LoginPage';
 import './App.css';
 
-function App() {
+function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(authAPI.isAuthenticated());
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Initialize feature flags
@@ -27,6 +28,7 @@ function App() {
   const handleLogout = () => {
     authAPI.logout();
     setIsAuthenticated(false);
+    navigate('/');
   };
 
   if (isLoading) {
@@ -39,8 +41,7 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="app">
+    <div className="app">
         <header className="app-header">
           <div className="container">
             <div className="header-content">
@@ -68,8 +69,14 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
+            <Route
+              path="/search"
+              element={isAuthenticated ? <SearchPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/vehicles/:id"
+              element={isAuthenticated ? <VehicleDetailPage /> : <Navigate to="/login" />}
+            />
             <Route
               path="/valuation"
               element={isAuthenticated ? <ValuationPage /> : <Navigate to="/login" />}
@@ -87,6 +94,13 @@ function App() {
           </div>
         </footer>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
