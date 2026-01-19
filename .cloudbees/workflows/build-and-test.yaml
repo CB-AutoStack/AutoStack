@@ -1,0 +1,237 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Build and test Web UI
+  build-web:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-web-artifact.outputs.id }}
+    steps:
+      - name: Checkout
+        uses: cloudbees-io/checkout@v1
+
+      - name: Install dependencies and test
+        kind: test
+        uses: docker://node:20-alpine
+        env:
+          CI: "true"
+        run: |
+          set -eu
+          cd apps/web
+          echo "Installing dependencies..."
+          npm ci
+
+          echo "Running linter..."
+          npm run lint || true
+
+          echo "Running tests..."
+          npm test
+
+      - name: Build application
+        kind: build
+        uses: docker://node:20-alpine
+        env:
+          CI: "true"
+        run: |
+          set -eu
+          cd apps/web
+          echo "Building application..."
+          npm run build
+
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build Docker image
+        kind: build
+        id: kaniko-web
+        uses: cloudbees-io/kaniko@v1
+        with:
+          context: apps/web
+          dockerfile: apps/web/Dockerfile
+          destination: ${{ vars.DOCKER_USER }}/autostack-web:${{ cloudbees.scm.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
+
+      - name: Parse Web artifact ID
+        id: parse-web-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-web.outputs.artifact-ids }}
+        run: |
+          set -eu
+          echo "DEBUG: Raw IDS value: '$IDS'"
+
+          # Extract UUID directly using grep -o
+          ART_ID=$(echo "$IDS" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+
+          if [ -z "$ART_ID" ]; then
+            echo "ERROR: Could not extract UUID from artifact-ids output" >&2
+            exit 1
+          fi
+
+          echo "Extracted artifact ID: $ART_ID"
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+
+  # Build and test Inventory API
+  build-api-inventory:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-inventory-artifact.outputs.id }}
+    steps:
+      - name: Checkout
+        uses: cloudbees-io/checkout@v1
+
+      - name: Run tests
+        kind: test
+        uses: docker://golang:1.21-alpine
+        run: |
+          set -eu
+          cd apps/api-inventory
+          echo "Downloading dependencies..."
+          go mod download
+          echo "Running tests..."
+          go test ./... -v
+
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build Docker image
+        kind: build
+        id: kaniko-inventory
+        uses: cloudbees-io/kaniko@v1
+        with:
+          context: .
+          dockerfile: apps/api-inventory/Dockerfile
+          destination: ${{ vars.DOCKER_USER }}/autostack-api-inventory:${{ cloudbees.scm.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
+
+      - name: Parse Inventory artifact ID
+        id: parse-inventory-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-inventory.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=$(echo "$IDS" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+
+          if [ -z "$ART_ID" ]; then
+            echo "ERROR: Could not extract UUID" >&2
+            exit 1
+          fi
+
+          echo "Extracted artifact ID: $ART_ID"
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+
+  # Build and test Valuations API
+  build-api-valuations:
+    outputs:
+      ARTIFACT_ID: ${{ steps.parse-valuations-artifact.outputs.id }}
+    steps:
+      - name: Checkout
+        uses: cloudbees-io/checkout@v1
+
+      - name: Run tests
+        kind: test
+        uses: docker://golang:1.21-alpine
+        run: |
+          set -eu
+          cd apps/api-valuations
+          echo "Downloading dependencies..."
+          go mod download
+          echo "Running tests..."
+          go test ./... -v
+
+      - name: Configure Docker credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: https://index.docker.io/v1/
+          username: ${{ vars.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build Docker image
+        kind: build
+        id: kaniko-valuations
+        uses: cloudbees-io/kaniko@v1
+        with:
+          context: .
+          dockerfile: apps/api-valuations/Dockerfile
+          destination: ${{ vars.DOCKER_USER }}/autostack-api-valuations:${{ cloudbees.scm.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ cloudbees.scm.sha }}
+
+      - name: Parse Valuations artifact ID
+        id: parse-valuations-artifact
+        uses: docker://alpine:3.20
+        shell: sh
+        env:
+          IDS: ${{ steps.kaniko-valuations.outputs.artifact-ids }}
+        run: |
+          set -eu
+          ART_ID=$(echo "$IDS" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+
+          if [ -z "$ART_ID" ]; then
+            echo "ERROR: Could not extract UUID" >&2
+            exit 1
+          fi
+
+          echo "Extracted artifact ID: $ART_ID"
+          printf '%s' "$ART_ID" > "$CLOUDBEES_OUTPUTS/id"
+
+  # Deploy all components to Dev environment using Helm
+  deploy-dev:
+    # CloudBees environment (must exist in platform settings)
+    # This is the Kubernetes namespace where resources will be deployed
+    environment: auto-stack-dev
+
+    # Reference to reusable deployment workflow
+    uses: ./.cloudbees/workflows/deploy.yaml
+
+    # Wait for all build jobs to complete before deploying
+    needs: [build-web, build-api-inventory, build-api-valuations]
+
+    with:
+      # Docker images to deploy (built in previous jobs)
+      web_image: ${{ vars.DOCKER_USER }}/autostack-web:${{ cloudbees.scm.sha }}
+      api_inventory_image: ${{ vars.DOCKER_USER }}/autostack-api-inventory:${{ cloudbees.scm.sha }}
+      api_valuations_image: ${{ vars.DOCKER_USER }}/autostack-api-valuations:${{ cloudbees.scm.sha }}
+
+      # Artifact IDs for deployment tracking
+      web_artifact_id: ${{ needs.build-web.outputs.ARTIFACT_ID }}
+      api_inventory_artifact_id: ${{ needs.build-api-inventory.outputs.ARTIFACT_ID }}
+      api_valuations_artifact_id: ${{ needs.build-api-valuations.outputs.ARTIFACT_ID }}
+
+      # Environment configuration
+      environment_name: auto-stack-dev    # Must match 'environment' above (K8s namespace)
+      repository: ${{ cloudbees.scm.repository }}
+      commit_sha: ${{ cloudbees.scm.sha }}
+
+      # Subdomain configuration
+      # URL will be: <app_name>-<instance_id>-<environment_name>.<base_domain>
+      # Example: autostack-demo-auto-stack-dev.demos.se-main-demo.sa-demo.beescloud.com
+      app_name: autostack             # Application name prefix for subdomain
+      instance_id: demo                  # Instance identifier (e.g., demo, team1, customer-name)
+      base_domain: ${{ vars.STACK_BASE_NAME }}  # Base domain with wildcard DNS
+
+    # Inherit secrets from workflow (e.g., KUBECONFIG, FM_TOKEN)
+    secrets: inherit
+    vars: inherit
