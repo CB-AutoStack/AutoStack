@@ -35,9 +35,14 @@ function AppContent() {
                 <Link to="/search">Browse Vehicles</Link>
                 {isAuthenticated && <Link to="/valuation">Trade-In Value</Link>}
                 {isAuthenticated ? (
-                  <button onClick={handleLogout} className="btn btn-secondary">
-                    Logout
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ color: '#666', fontSize: '0.9rem' }}>
+                      {authAPI.getCurrentUser()?.name || authAPI.getCurrentUser()?.email}
+                    </span>
+                    <button onClick={handleLogout} className="btn btn-secondary">
+                      Logout
+                    </button>
+                  </div>
                 ) : (
                   <Link to="/login" className="btn btn-primary">
                     Login
