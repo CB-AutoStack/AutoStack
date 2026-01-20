@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { vehiclesAPI } from '../services/api';
+import { vehiclesAPI, authAPI } from '../services/api';
 import type { Vehicle } from '../types';
 import { formatCurrency, formatMileage } from '../utils/format';
 import useRoxVariant from '../hooks/useRoxVariant';
@@ -37,7 +37,17 @@ export default function SearchPage() {
 
   const loadVehicles = useCallback(async () => {
     try {
-      const data = await vehiclesAPI.getAll();
+      const user = authAPI.getCurrentUser();
+      let data;
+
+      if (user?.country) {
+        // Filter by user's country
+        data = await vehiclesAPI.search({ country: user.country });
+      } else {
+        // Fallback to all vehicles if no user
+        data = await vehiclesAPI.getAll();
+      }
+
       setVehicles(sortVehicles(data));
     } catch (error) {
       console.error('Failed to load vehicles:', error);
@@ -60,7 +70,14 @@ export default function SearchPage() {
   const handleSearch = async () => {
     setLoading(true);
     try {
+      const user = authAPI.getCurrentUser();
       const params: Record<string, string> = {};
+
+      // Always filter by user's country if logged in
+      if (user?.country) {
+        params.country = user.country;
+      }
+
       if (filters.make) params.make = filters.make;
       if (filters.type) params.type = filters.type;
       if (filters.minPrice) params.minPrice = filters.minPrice;

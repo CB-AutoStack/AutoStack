@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { vehiclesAPI } from '../services/api';
+import { vehiclesAPI, authAPI } from '../services/api';
 import type { Vehicle } from '../types';
 import { formatCurrency } from '../utils/format';
 
@@ -14,7 +14,17 @@ export default function HomePage() {
 
   const loadFeaturedVehicles = async () => {
     try {
-      const vehicles = await vehiclesAPI.getAll();
+      const user = authAPI.getCurrentUser();
+      let vehicles;
+
+      if (user?.country) {
+        // Filter by user's country
+        vehicles = await vehiclesAPI.search({ country: user.country });
+      } else {
+        // Fallback to all vehicles if no user
+        vehicles = await vehiclesAPI.getAll();
+      }
+
       // Show first 6 vehicles as featured
       setFeaturedVehicles(vehicles.slice(0, 6));
     } catch (error) {
