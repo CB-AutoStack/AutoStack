@@ -30,7 +30,7 @@ export class FeatureFlags {
   public showFinancingCalculator = new Rox.Flag(false);
 
   // 360-degree photo viewer
-  public enable360Photos = new Rox.Flag(false);
+  public enable360Photos = new Rox.Flag(true);
 
   // Vehicle recommendations algorithm
   public vehicleRecommendations = new Rox.RoxString('price-based', [
