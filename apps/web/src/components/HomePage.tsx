@@ -7,10 +7,15 @@ import { formatCurrency } from '../utils/format';
 export default function HomePage() {
   const [featuredVehicles, setFeaturedVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const isAuthenticated = authAPI.isAuthenticated();
 
   useEffect(() => {
-    loadFeaturedVehicles();
-  }, []);
+    if (isAuthenticated) {
+      loadFeaturedVehicles();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const loadFeaturedVehicles = async () => {
     try {
@@ -48,13 +53,14 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <section style={{ marginTop: '3rem' }}>
-        <h3 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Featured Vehicles</h3>
-        {loading ? (
-          <p>Loading vehicles...</p>
-        ) : (
-          <div className="grid">
-            {featuredVehicles.map((vehicle) => (
+      {isAuthenticated && (
+        <section style={{ marginTop: '3rem' }}>
+          <h3 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Featured Vehicles</h3>
+          {loading ? (
+            <p>Loading vehicles...</p>
+          ) : (
+            <div className="grid">
+              {featuredVehicles.map((vehicle) => (
               <div key={vehicle.id} className="card">
                 {vehicle.images && vehicle.images.length > 0 && (
                   <img
@@ -90,12 +96,14 @@ export default function HomePage() {
                   View Details
                 </Link>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      <section style={{ marginTop: '4rem', padding: '3rem 0', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
+      {isAuthenticated && (
+        <section style={{ marginTop: '4rem', padding: '3rem 0', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
         <div style={{ textAlign: 'center' }}>
           <h3 style={{ fontSize: '1.8rem', marginBottom: '1rem' }}>
             Know Your Trade-In Value
@@ -107,7 +115,8 @@ export default function HomePage() {
             Get Instant Valuation
           </Link>
         </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
