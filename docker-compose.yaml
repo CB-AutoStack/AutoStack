@@ -4,8 +4,8 @@ services:
   # Inventory API Service (Go)
   api-inventory:
     build:
-      context: ./apps/api-inventory
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api-inventory/Dockerfile
     container_name: autostack-api-inventory
     environment:
       DATA_PATH: ${DATA_PATH:-/app/data/seed}
@@ -28,8 +28,8 @@ services:
   # Valuations API Service (Go)
   api-valuations:
     build:
-      context: ./apps/api-valuations
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api-valuations/Dockerfile
     container_name: autostack-api-valuations
     environment:
       DATA_PATH: ${DATA_PATH:-/app/data/seed}

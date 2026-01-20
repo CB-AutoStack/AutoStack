@@ -208,6 +208,9 @@ export default function SearchPage() {
                       borderRadius: '4px',
                       marginBottom: '1rem',
                     }}
+                    onError={(e) => {
+                      e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Crect fill='%23f0f0f0' width='400' height='200'/%3E%3Ctext x='50%25' y='40%25' font-size='16' text-anchor='middle' fill='%23666' dy='.3em'%3E${vehicle.type.toUpperCase()}%3C/text%3E%3Ctext x='50%25' y='60%25' font-size='14' text-anchor='middle' fill='%23999' dy='.3em'%3EImage Not Available%3C/text%3E%3C/svg%3E`;
+                    }}
                   />
                 )}
                 <h4 style={{ marginBottom: '0.5rem' }}>
